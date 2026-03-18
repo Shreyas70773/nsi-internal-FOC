@@ -1,0 +1,37 @@
+# Core
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-multipart
+
+# Database
+aiosqlite
+
+# LLM (OpenAI-compatible SDK covers KIMI K2, GPT, Claude, Perplexity)
+openai
+httpx
+
+# Google Drive
+google-api-python-client
+google-auth
+google-auth-httplib2
+
+# Email (Microsoft 365 OAuth2)
+msal
+
+# Scheduling
+apscheduler
+
+# Document Generation
+python-docx
+
+# WebSocket (OpenClaw Gateway)
+websockets
+
+# Auth & Security
+bcrypt
+PyJWT
+
+# Utilities
+python-dateutil

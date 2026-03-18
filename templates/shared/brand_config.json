@@ -1,0 +1,23 @@
+{
+  "pacific_unity": {
+    "company_name": "Pacific Unity MEA FZ-LLC",
+    "address": "Dubai, UAE",
+    "phone": "",
+    "email": "info@stelastra.com",
+    "logo": "logo_pacific_unity.png"
+  },
+  "stel_astra": {
+    "company_name": "Stel Astra Ventures LLP",
+    "address": "India",
+    "phone": "",
+    "email": "info@stelastra.com",
+    "logo": "logo_stel_astra.png"
+  },
+  "nsi_projects": {
+    "company_name": "NSI Projects",
+    "address": "",
+    "phone": "",
+    "email": "info@stelastra.com",
+    "logo": ""
+  }
+}

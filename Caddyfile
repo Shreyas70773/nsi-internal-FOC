@@ -1,0 +1,10 @@
+bot.stelastra.com {
+    reverse_proxy app:8000
+    encode gzip
+    header {
+        X-Robots-Tag "noindex, nofollow"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+    }
+}

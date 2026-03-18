@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "username": "shreyas",
+      "password": "changeme",
+      "role": "admin",
+      "name": "Shreyas Sunil",
+      "whatsapp_id": "+971000000000",
+      "email": "shreyas@stelastra.com"
+    },
+    {
+      "username": "dad",
+      "password": "changeme",
+      "role": "admin",
+      "name": "Dad Africa",
+      "whatsapp_id": "+000000000000",
+      "email": ""
+    },
+    {
+      "username": "govind",
+      "password": "changeme",
+      "role": "employee",
+      "name": "Govind",
+      "whatsapp_id": "+910000000000",
+      "email": ""
+    },
+    {
+      "username": "shibu",
+      "password": "changeme",
+      "role": "employee",
+      "name": "Shibu",
+      "whatsapp_id": "+910000000001",
+      "email": ""
+    },
+    {
+      "username": "kumutha",
+      "password": "changeme",
+      "role": "employee",
+      "name": "Kumutha",
+      "whatsapp_id": "+910000000002",
+      "email": ""
+    }
+  ]
+}

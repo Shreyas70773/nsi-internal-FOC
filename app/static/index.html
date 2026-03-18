@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>NSI Bot — Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg-elevated: #162033;
+            --card: #1e293b;
+            --card-hover: #263548;
+            --border: #334155;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #a855f7;
+            --radius: 8px;
+            --radius-sm: 6px;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        #app { height: 100%; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* --- Layout --- */
+        .layout { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar {
+            width: 240px; min-width: 240px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+        }
+        .sidebar-brand {
+            padding: 1.25rem 1.25rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-brand h1 {
+            font-size: 1.25rem; font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .sidebar-brand p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+        .sidebar-nav { flex: 1; padding: 0.5rem 0.625rem; overflow-y: auto; }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.625rem 0.75rem; margin-bottom: 2px;
+            border-radius: var(--radius-sm); cursor: pointer;
+            color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;
+            transition: all 0.15s; text-decoration: none; border: none; background: none; width: 100%;
+        }
+        .sidebar-link:hover { background: var(--bg-elevated); color: var(--text); }
+        .sidebar-link.active { background: rgba(59,130,246,0.12); color: var(--accent); }
+        .sidebar-link svg { flex-shrink: 0; }
+        .sidebar-footer {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .sidebar-user { display: flex; align-items: center; gap: 0.625rem; }
+        .user-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 600; color: #fff; flex-shrink: 0;
+        }
+        .user-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
+
+        .main-content { flex: 1; overflow-y: auto; background: var(--bg); }
+
+        /* --- Mobile Nav --- */
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--card); border-top: 1px solid var(--border);
+            padding: 0.375rem 0; z-index: 100;
+        }
+        .mobile-nav-inner {
+            display: flex; justify-content: space-around; align-items: center;
+            max-width: 480px; margin: 0 auto;
+        }
+        .mobile-link {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            padding: 0.25rem 0.75rem; cursor: pointer;
+            color: var(--text-muted); font-size: 0.625rem; font-weight: 500;
+            transition: color 0.15s; text-decoration: none; border: none; background: none;
+        }
+        .mobile-link.active { color: var(--accent); }
+        .mobile-link svg { width: 20px; height: 20px; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .mobile-nav { display: block; }
+            .main-content { padding-bottom: 64px; }
+        }
+
+        /* --- Login --- */
+        .login-container {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 1rem;
+            background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 60%);
+        }
+        .login-card {
+            width: 100%; max-width: 380px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 2rem;
+        }
+        .login-brand { text-align: center; margin-bottom: 1.75rem; }
+        .login-brand h1 {
+            font-size: 1.75rem; font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .login-brand p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
+
+        /* --- Shared UI --- */
+        .page { padding: 1.5rem; max-width: 1100px; }
+        @media (max-width: 768px) { .page { padding: 1rem; } }
+        .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; }
+        .page-header h2 { font-size: 1.25rem; font-weight: 700; }
+        .page-loading { display: flex; justify-content: center; padding: 4rem; }
+        .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem;
+        }
+        .card h3 { font-size: 0.9375rem; font-weight: 600; margin-bottom: 0.75rem; }
+
+        .badge {
+            display: inline-block; padding: 0.175rem 0.5rem;
+            border-radius: 9999px; font-size: 0.6875rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.02em;
+        }
+        .badge-pending  { background: #1e3a5f; color: #60a5fa; }
+        .badge-nudged   { background: #422006; color: #fbbf24; }
+        .badge-warning  { background: #451a03; color: #fb923c; }
+        .badge-error    { background: #450a0a; color: #fca5a5; }
+        .badge-success  { background: #052e16; color: #4ade80; }
+        .badge-muted    { background: #1e293b; color: #94a3b8; }
+        .badge-purple   { background: #2e1065; color: #c084fc; }
+        .badge-info     { background: #172554; color: #93c5fd; }
+
+        .priority-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+            padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+            border: 1px solid transparent; cursor: pointer;
+            font-size: 0.8125rem; font-weight: 500; font-family: inherit;
+            transition: all 0.15s; text-decoration: none; color: var(--text);
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-success { background: #15803d; border-color: #15803d; color: #fff; }
+        .btn-success:hover:not(:disabled) { background: #166534; }
+        .btn-warning { background: #a16207; border-color: #a16207; color: #fff; }
+        .btn-warning:hover:not(:disabled) { background: #854d0e; }
+        .btn-danger { background: #b91c1c; border-color: #b91c1c; color: #fff; }
+        .btn-danger:hover:not(:disabled) { background: #991b1b; }
+        .btn-ghost { background: transparent; border-color: var(--border); }
+        .btn-ghost:hover:not(:disabled) { background: var(--bg-elevated); }
+        .btn-sm { padding: 0.3rem 0.625rem; font-size: 0.75rem; }
+        .btn-full { width: 100%; }
+
+        .input, .select {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 0.5rem 0.75rem;
+            color: var(--text); font-size: 0.875rem; font-family: inherit;
+            transition: border-color 0.15s; outline: none; width: auto;
+        }
+        .input:focus, .select:focus { border-color: var(--accent); }
+        .input::placeholder { color: var(--text-muted); }
+        .input-full { width: 100%; }
+        .select { appearance: none; padding-right: 2rem; cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 0.6rem center;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.375rem; }
+        .form-group .input { width: 100%; }
+
+        .alert { padding: 0.625rem 0.875rem; border-radius: var(--radius-sm); font-size: 0.8125rem; margin-bottom: 1rem; }
+        .alert-error { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+
+        .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+        .empty-state p { font-size: 0.9375rem; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 28px; height: 28px;
+            border: 3px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+
+        .text-muted { color: var(--text-muted); }
+        .text-secondary { color: var(--text-secondary); }
+        .text-error { color: var(--error); }
+        .text-xs { font-size: 0.6875rem; }
+
+        /* --- Tasks --- */
+        .task-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .task-card { transition: border-color 0.15s; }
+        .task-card:hover { border-color: var(--text-muted); }
+        .task-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .task-priority { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); }
+        .task-desc { font-size: 0.9375rem; margin-bottom: 0.5rem; line-height: 1.4; }
+        .task-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.625rem; }
+        .task-actions { display: flex; gap: 0.375rem; flex-wrap: wrap; }
+
+        /* --- Chat --- */
+        .chat-page { display: flex; flex-direction: column; height: calc(100vh - 0px); }
+        @media (max-width: 768px) { .chat-page { height: calc(100vh - 64px); } }
+        .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .chat-header h2 { font-size: 1.1rem; font-weight: 700; }
+        .chat-header p { font-size: 0.75rem; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        .message { display: flex; flex-direction: column; max-width: 75%; }
+        .message-user { align-self: flex-end; align-items: flex-end; }
+        .message-bot { align-self: flex-start; align-items: flex-start; }
+        .message-bubble {
+            padding: 0.625rem 0.875rem; border-radius: 12px;
+            font-size: 0.875rem; line-height: 1.45; word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .message-user .message-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+        .message-bot .message-bubble { background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .message-time { font-size: 0.625rem; color: var(--text-muted); margin-top: 0.25rem; padding: 0 0.25rem; }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+        .typing { display: flex; gap: 4px; padding: 0.75rem 0.875rem !important; align-items: center; }
+        .typing span {
+            display: block; width: 7px; height: 7px;
+            background: var(--text-muted); border-radius: 50%;
+            animation: typing-bounce 1.4s infinite;
+        }
+        .typing span:nth-child(2) { animation-delay: 0.15s; }
+        .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+        .chat-input {
+            display: flex; gap: 0.5rem; padding: 0.875rem 1.5rem;
+            border-top: 1px solid var(--border); flex-shrink: 0; background: var(--card);
+        }
+        .chat-input .input { flex: 1; }
+
+        /* --- Documents --- */
+        .search-bar { margin-bottom: 1rem; }
+        .doc-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .doc-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; transition: border-color 0.15s; }
+        .doc-card:hover { border-color: var(--text-muted); }
+        .doc-info { flex: 1; min-width: 0; }
+        .doc-info strong { font-size: 0.9375rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .doc-meta { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.375rem; align-items: center; font-size: 0.75rem; }
+        .doc-info > p { font-size: 0.8125rem; margin-top: 0.25rem; }
+
+        /* --- Analytics --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.125rem 1rem;
+            display: flex; flex-direction: column; gap: 0.25rem;
+        }
+        .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+        .stat-success { color: var(--success); }
+        .stat-error { color: var(--error); }
+        .stat-accent { color: var(--accent); }
+        .analytics-section { margin-bottom: 1rem; }
+        .completion-bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin-bottom: 0.5rem; }
+        .completion-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); border-radius: 5px; transition: width 0.5s; }
+        .table-container { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+        .data-table th { text-align: left; padding: 0.5rem 0.75rem; color: var(--text-muted); font-weight: 600; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+        .data-table tr:last-child td { border-bottom: none; }
+        .token-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.375rem 0; font-size: 0.8125rem; }
+
+        /* --- Settings --- */
+        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 0.625rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+        .settings-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">
+        import { h, render } from 'https://esm.sh/preact@10.19.3';
+        import { useState, useEffect, useCallback, useRef } from 'https://esm.sh/preact@10.19.3/hooks';
+        import { Router, Link } from 'https://esm.sh/preact-router@4.1.2';
+        import htm from 'https://esm.sh/htm@3.1.1';
+        const html = htm.bind(h);
+
+        /* ------------------------------------------------------------------ */
+        /*  Utilities                                                          */
+        /* ------------------------------------------------------------------ */
+
+        function formatIST(s) {
+            if (!s) return '\u2014';
+            let d = new Date(s);
+            if (isNaN(d.getTime())) d = new Date(s + 'Z');
+            if (isNaN(d.getTime())) return s;
+            return d.toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true,
+            });
+        }
+
+        function icon(name) {
+            const paths = {
+                tasks:    html`<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/>`,
+                chat:     html`<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>`,
+                docs:     html`<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/>`,
+                chart:    html`<path d="M18 20V10M12 20V4M6 20v-6"/>`,
+                settings: html`<circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M1 12h4M19 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>`,
+                more:     html`<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>`,
+            };
+            return html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                ${paths[name] || ''}
+            </svg>`;
+        }
+
+        const NAV = [
+            { id: 'tasks',     label: 'Tasks',     ic: 'tasks' },
+            { id: 'chat',      label: 'Chat',      ic: 'chat' },
+            { id: 'documents', label: 'Documents', ic: 'docs' },
+            { id: 'analytics', label: 'Analytics', ic: 'chart' },
+            { id: 'settings',  label: 'Settings',  ic: 'settings' },
+        ];
+
+        const STATUS_BADGE = {
+            pending: 'badge-pending', nudged_1: 'badge-nudged', nudged_2: 'badge-warning',
+            escalated: 'badge-error', completed: 'badge-success', cancelled: 'badge-muted', paused: 'badge-purple',
+        };
+        const PRIORITY_COLOR = { P0: '#ef4444', P1: '#f59e0b', P2: '#3b82f6' };
+
+        /* ------------------------------------------------------------------ */
+        /*  Login                                                              */
+        /* ------------------------------------------------------------------ */
+
+        function LoginPage({ onLogin }) {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const submit = async (e) => {
+                e.preventDefault();
+                setLoading(true); setError('');
+                try {
+                    const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.detail || 'Login failed');
+                    onLogin(data.token, data.user);
+                } catch (err) {
+                    setError(err.message);
+                } finally { setLoading(false); }
+            };
+
+            return html`
+                <div class="login-container">
+                    <form class="login-card" onSubmit=${submit}>
+                        <div class="login-brand">
+                            <h1>NSI Bot</h1>
+                            <p>North Star Impex Group</p>
+                        </div>
+                        ${error && html`<div class="alert alert-error">${error}</div>`}
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input class="input" type="text" value=${username}
+                                onInput=${e => setUsername(e.target.value)}
+                                placeholder="Enter username" required autofocus />
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input class="input" type="password" value=${password}
+                                onInput=${e => setPassword(e.target.value)}
+                                placeholder="Enter password" required />
+                        </div>
+                        <button class="btn btn-primary btn-full" type="submit" disabled=${loading}>
+                            ${loading ? 'Signing in\u2026' : 'Sign In'}
+                        </button>
+                    </form>
+                </div>`;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /*  Tasks                                                              */
+        /* ------------------------------------------------------------------ */
+
+        function TasksPage({ api }) {
+            const [tasks, setTasks] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [status, setStatus] = useState('');
+            const [priority, setPriority] = useState('');
+
+            const load = useCallback(async () => {
+                setLoading(true);
+                try {
+                    const p = new URLSearchParams();
+                    if (status) p.set('status', status);
+                    if (priority) p.set('priority', priority);
+                    setTasks(await api('/api/tasks?' + p));
+                } catch (e) { console.error(e); }
+                setLoading(false);
+            }, [status, priority, api]);
+
+            useEffect(() => { load(); const iv = setInterval(load, 30000); return () => clearInterval(iv); }, [load]);
+
+            const act = async (id, s) => {
+                try {
+                    await api('/api/tasks/' + id, { method: 'PATCH', body: { status: s } });
+                    load();
+                } catch (e) { console.error(e); }
+            };
+
+            if (loading && tasks.length === 0) return html`<div class="page-loading"><div class="spinner"></div></div>`;
+
+            return html`
+                <div class="page">
+                    <div class="page-header">
+                        <h2>Tasks</h2>
+                        <div class="filters">
+                            <select class="input select" value=${status} onChange=${e => setStatus(e.target.value)}>
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="nudged_1">Nudged 1</option>
+                                <option value="nudged_2">Nudged 2</option>
+                                <option value="escalated">Escalated</option>
+                                <option value="completed">Completed</option>
+                                <option value="paused">Paused</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            <select class="input select" value=${priority} onChange=${e => setPriority(e.target.value)}>
+                                <option value="">All Priority</option>
+                                <option value="P0">P0 \u2014 Urgent</option>
+                                <option value="P1">P1 \u2014 Normal</option>
+                                <option value="P2">P2 \u2014 Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    ${tasks.length === 0
+                        ? html`<div class="empty-state"><p>No tasks match the current filters.</p></div>`
+                        : html`<div class="task-list">${tasks.map(t => html`
+                            <div class="card task-card" key=${t.id}>
+                                <div class="task-header">
+                                    <span class="priority-dot" style="background:${PRIORITY_COLOR[t.priority]||'#64748b'}"></span>
+                                    <span class="task-priority">${t.priority}</span>
+                                    <span class="badge ${STATUS_BADGE[t.status]||'badge-muted'}">${t.status.replace('_',' ')}</span>
+                                </div>
+                                <p class="task-desc">${t.description}</p>
+                                <div class="task-meta">
+                                    <span>Assigned: ${t.assignee_name || 'Unknown'}</span>
+                                    ${t.assigner_name ? html`<span>By: ${t.assigner_name}</span>` : null}
+                                    ${t.deadline ? html`<span>Due: ${formatIST(t.deadline)}</span>` : null}
+                                    <span>${formatIST(t.created_at)}</span>
+                                </div>
+                                ${!['completed','cancelled'].includes(t.status) ? html`
+                                    <div class="task-actions">
+                                        <button class="btn btn-sm btn-success" onClick=${()=>act(t.id,'completed')}>Complete</button>
+                                        ${t.status!=='paused'
+                                            ? html`<button class="btn btn-sm btn-warning" onClick=${()=>act(t.id,'paused')}>Pause</button>`
+                                            : html`<button class="btn btn-sm btn-primary" onClick=${()=>act(t.id,'pending')}>Resume</button>`}
+                                        <button class="btn btn-sm btn-danger" onClick=${()=>act(t.id,'cancelled')}>Cancel</button>
+                                    </div>` : null}
+                            </div>`)}</div>`}
+                </div>`;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /*  Chat                                                               */
+        /* ------------------------------------------------------------------ */
+
+        function ChatPage({ api, user }) {
+            const [messages, setMessages] = useState([]);
+            const [input, setInput] = useState('');
+            const [sending, setSending] = useState(false);
+            const endRef = useRef(null);
+            const inputRef = useRef(null);
+
+            useEffect(() => {
+                api('/api/chat/history').then(setMessages).catch(console.error);
+            }, [api]);
+
+            useEffect(() => {
+                endRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages, sending]);
+
+            const send = async (e) => {
+                e.preventDefault();
+                const text = input.trim();
+                if (!text || sending) return;
+                setInput(''); setSending(true);
+
+                const tempUser = { id: 't-' + Date.now(), sender_id: user.id, sender_name: user.name, content: text, timestamp: new Date().toISOString() };
+                setMessages(prev => [...prev, tempUser]);
+
+                try {
+                    const res = await api('/api/chat', { method: 'POST', body: { message: text } });
+                    setMessages(prev => [...prev, {
+                        id: res.message_id, sender_id: 'nsi-bot', sender_name: 'NSI Bot',
+                        content: res.reply, timestamp: new Date().toISOString(),
+                    }]);
+                } catch (err) {
+                    setMessages(prev => [...prev, {
+                        id: 'err-' + Date.now(), sender_id: 'nsi-bot', sender_name: 'NSI Bot',
+                        content: 'Sorry, something went wrong. Please try again.', timestamp: new Date().toISOString(),
+                    }]);
+                }
+                setSending(false);
+                inputRef.current?.focus();
+            };
+
+            return html`
+                <div class="chat-page">
+                    <div class="chat-header">
+                        <h2>Chat</h2>
+                        <p class="text-muted">Talk to NSI Bot</p>
+                    </div>
+                    <div class="chat-messages">
+                        ${messages.length === 0 && !sending
+                            ? html`<div class="empty-state" style="margin:auto"><p>Send a message to get started.</p></div>`
+                            : null}
+                        ${messages.map(m => html`
+                            <div class="message ${m.sender_id === 'nsi-bot' ? 'message-bot' : 'message-user'}" key=${m.id}>
+                                <div class="message-bubble">${m.content}</div>
+                                <span class="message-time">${formatIST(m.timestamp)}</span>
+                            </div>`)}
+                        ${sending ? html`
+                            <div class="message message-bot">
+                                <div class="message-bubble typing"><span></span><span></span><span></span></div>
+                            </div>` : null}
+                        <div ref=${endRef}></div>
+                    </div>
+                    <form class="chat-input" onSubmit=${send}>
+                        <input ref=${inputRef} class="input" type="text" value=${input}
+                            onInput=${e => setInput(e.target.value)}
+                            placeholder="Type a message\u2026" />
+                        <button class="btn btn-primary" type="submit" disabled=${sending || !input.trim()}>Send</button>
+                    </form>
+                </div>`;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /*  Documents                                                          */
+        /* ------------------------------------------------------------------ */
+
+        function DocumentsPage({ api }) {
+            const [docs, setDocs] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [query, setQuery] = useState('');
+            const timer = useRef(null);
+
+            const fetchDocs = useCallback(async (q) => {
+                setLoading(true);
+                try {
+                    const p = new URLSearchParams();
+                    if (q) p.set('q', q);
+                    setDocs(await api('/api/documents?' + p));
+                } catch (e) { console.error(e); }
+                setLoading(false);
+            }, [api]);
+
+            useEffect(() => {
+                clearTimeout(timer.current);
+                timer.current = setTimeout(() => fetchDocs(query), 300);
+                return () => clearTimeout(timer.current);
+            }, [query, fetchDocs]);
+
+            return html`
+                <div class="page">
+                    <div class="page-header"><h2>Documents</h2></div>
+                    <div class="search-bar">
+                        <input class="input input-full" type="text" value=${query}
+                            onInput=${e => setQuery(e.target.value)}
+                            placeholder="Search by filename, project, type\u2026" />
+                    </div>
+                    ${loading ? html`<div class="page-loading"><div class="spinner"></div></div>`
+                    : docs.length === 0 ? html`<div class="empty-state"><p>No documents found.</p></div>`
+                    : html`<div class="doc-list">${docs.map(d => html`
+                        <div class="card doc-card" key=${d.id}>
+                            <div class="doc-info">
+                                <strong>${d.filename}</strong>
+                                <div class="doc-meta">
+                                    ${d.project ? html`<span class="badge badge-info">${d.project}</span>` : null}
+                                    ${d.doc_type ? html`<span class="badge badge-muted">${d.doc_type}</span>` : null}
+                                    <span class="text-muted">${formatIST(d.created_at)}</span>
+                                </div>
+                                ${d.description ? html`<p class="text-secondary">${d.description}</p>` : null}
+                            </div>
+                            ${d.drive_url
+                                ? html`<a class="btn btn-sm btn-primary" href=${d.drive_url} target="_blank" rel="noopener">Open</a>`
+                                : html`<span class="badge ${d.status==='uploaded'?'badge-success':'badge-warning'}">${d.status||'pending'}</span>`}
+                        </div>`)}</div>`}
+                </div>`;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /*  Analytics                                                          */
+        /* ------------------------------------------------------------------ */
+
+        function AnalyticsPage({ api }) {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                api('/api/analytics/summary').then(setData).catch(console.error).finally(() => setLoading(false));
+            }, [api]);
+
+            if (loading) return html`<div class="page-loading"><div class="spinner"></div></div>`;
+            if (!data) return html`<div class="empty-state"><p>Could not load analytics.</p></div>`;
+
+            const rate = data.tasks_total > 0 ? Math.round((data.tasks_completed / data.tasks_total) * 100) : 0;
+            const pItems = ['P0','P1','P2'].map(p => ({ label: p, ...(data.by_priority[p] || { total:0, completed:0, overdue:0 }) }));
+            const pMax = Math.max(...pItems.map(p => p.total), 1);
+            const pColors = { P0:'#ef4444', P1:'#f59e0b', P2:'#3b82f6' };
+
+            return html`
+                <div class="page">
+                    <div class="page-header"><h2>Analytics</h2></div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><span class="stat-value">${data.tasks_total}</span><span class="stat-label">Total Tasks</span></div>
+                        <div class="stat-card"><span class="stat-value stat-success">${data.tasks_completed}</span><span class="stat-label">Completed</span></div>
+                        <div class="stat-card"><span class="stat-value stat-error">${data.tasks_overdue}</span><span class="stat-label">Overdue</span></div>
+                        <div class="stat-card"><span class="stat-value stat-accent">${data.tasks_pending}</span><span class="stat-label">Pending</span></div>
+                    </div>
+
+                    <div class="analytics-section"><div class="card">
+                        <h3>Completion Rate</h3>
+                        <div class="completion-bar"><div class="completion-fill" style="width:${rate}%"></div></div>
+                        <p class="text-secondary" style="font-size:0.8125rem">${rate}% complete \u2014 Avg ${data.avg_completion_hours}h per task</p>
+                    </div></div>
+
+                    <div class="analytics-section"><div class="card">
+                        <h3>By Priority</h3>
+                        <svg width="100%" viewBox="0 0 420 ${pItems.length * 36}" style="overflow:visible;margin-top:0.5rem;display:block">
+                            ${pItems.map((p, i) => {
+                                const w = Math.max((p.total / pMax) * 220, 0);
+                                return html`<g transform="translate(0,${i*36})">
+                                    <text x="0" y="20" fill="#94a3b8" font-size="13" font-family="inherit" font-weight="600">${p.label}</text>
+                                    <rect x="36" y="4" width="${w}" height="24" rx="4" fill="${pColors[p.label]}" opacity="0.75"/>
+                                    <text x="${44+w}" y="20" fill="#e2e8f0" font-size="12" font-family="inherit">${p.total} total, ${p.completed} done${p.overdue ? ', '+p.overdue+' overdue' : ''}</text>
+                                </g>`;
+                            })}
+                        </svg>
+                    </div></div>
+
+                    ${data.by_employee.length > 0 ? html`
+                    <div class="analytics-section"><div class="card">
+                        <h3>By Employee</h3>
+                        <div class="table-container"><table class="data-table">
+                            <thead><tr><th>Name</th><th>Assigned</th><th>Completed</th><th>Overdue</th><th>Avg Hours</th></tr></thead>
+                            <tbody>${data.by_employee.map(e => html`
+                                <tr key=${e.name}>
+                                    <td>${e.name}</td><td>${e.assigned}</td><td>${e.completed}</td>
+                                    <td class="${e.overdue>0?'text-error':''}">${e.overdue}</td>
+                                    <td>${e.avg_hours}h</td>
+                                </tr>`)}
+                            </tbody>
+                        </table></div>
+                    </div></div>` : null}
+
+                    <div class="analytics-section"><div class="card">
+                        <h3>Token Usage Today</h3>
+                        <p class="text-secondary" style="font-size:0.8125rem;margin-bottom:0.5rem">
+                            ${(data.token_usage_today.total_tokens||0).toLocaleString()} tokens \u2014
+                            $${(data.token_usage_today.total_cost_estimate||0).toFixed(4)} est.
+                        </p>
+                        ${data.token_usage_today.by_provider.length === 0
+                            ? html`<p class="text-muted" style="font-size:0.8125rem">No usage recorded today.</p>`
+                            : data.token_usage_today.by_provider.map(p => html`
+                                <div class="token-row" key=${p.provider}>
+                                    <span class="badge badge-info">${p.provider}</span>
+                                    <span>${(p.tokens||0).toLocaleString()} tokens (${p.requests} requests)</span>
+                                </div>`)}
+                    </div></div>
+                </div>`;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /*  Settings                                                           */
+        /* ------------------------------------------------------------------ */
+
+        function SettingsPage({ user, onLogout }) {
+            return html`
+                <div class="page">
+                    <div class="page-header"><h2>Settings</h2></div>
+                    <div class="card">
+                        <h3>Profile</h3>
+                        <div class="settings-row"><span class="text-muted">Name</span><span>${user.name}</span></div>
+                        <div class="settings-row"><span class="text-muted">Username</span><span>${user.username}</span></div>
+                        <div class="settings-row"><span class="text-muted">Role</span><span class="badge badge-info">${user.role}</span></div>
+                    </div>
+                    <div class="card" style="margin-top:1rem">
+                        <h3>Session</h3>
+                        <p class="text-secondary" style="font-size:0.8125rem;margin-bottom:0.75rem">Sign out from the dashboard.</p>
+                        <button class="btn btn-danger" onClick=${onLogout}>Sign Out</button>
+                    </div>
+                    <div class="card" style="margin-top:1rem">
+                        <p class="text-muted" style="font-size:0.75rem">NSI Bot Dashboard v1.0</p>
+                    </div>
+                </div>`;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /*  App Shell                                                          */
+        /* ------------------------------------------------------------------ */
+
+        function App() {
+            const [token, setToken] = useState(localStorage.getItem('nsi_token'));
+            const [user, setUser] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('nsi_user')); } catch { return null; }
+            });
+            const [page, setPage] = useState(location.hash.slice(2) || 'tasks');
+
+            useEffect(() => {
+                const h = () => setPage(location.hash.slice(2) || 'tasks');
+                addEventListener('hashchange', h);
+                return () => removeEventListener('hashchange', h);
+            }, []);
+
+            const navigate = useCallback((p) => { location.hash = '#/' + p; }, []);
+
+            const handleLogin = (tok, usr) => {
+                localStorage.setItem('nsi_token', tok);
+                localStorage.setItem('nsi_user', JSON.stringify(usr));
+                setToken(tok); setUser(usr);
+            };
+
+            const handleLogout = async () => {
+                try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) }); } catch {}
+                localStorage.removeItem('nsi_token');
+                localStorage.removeItem('nsi_user');
+                setToken(null); setUser(null);
+                location.hash = '';
+            };
+
+            const api = useCallback(async (path, opts = {}) => {
+                const headers = { ...opts.headers };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
+                    headers['Content-Type'] = 'application/json';
+                    opts = { ...opts, body: JSON.stringify(opts.body) };
+                }
+                const res = await fetch(path, { ...opts, headers });
+                if (res.status === 401) { handleLogout(); throw new Error('Session expired'); }
+                if (!res.ok) {
+                    let msg;
+                    try { const j = await res.json(); msg = j.detail || res.statusText; } catch { msg = await res.text() || res.statusText; }
+                    throw new Error(msg);
+                }
+                return res.json();
+            }, [token]);
+
+            if (!token || !user) return html`<${LoginPage} onLogin=${handleLogin} />`;
+
+            const pages = {
+                tasks:     html`<${TasksPage} api=${api} />`,
+                chat:      html`<${ChatPage} api=${api} user=${user} />`,
+                documents: html`<${DocumentsPage} api=${api} />`,
+                analytics: html`<${AnalyticsPage} api=${api} />`,
+                settings:  html`<${SettingsPage} user=${user} onLogout=${handleLogout} />`,
+            };
+
+            return html`
+                <div class="layout">
+                    <aside class="sidebar">
+                        <div class="sidebar-brand">
+                            <h1>NSI Bot</h1>
+                            <p>Employee Dashboard</p>
+                        </div>
+                        <nav class="sidebar-nav">
+                            ${NAV.map(n => html`
+                                <button class="sidebar-link ${page===n.id?'active':''}" onClick=${()=>navigate(n.id)} key=${n.id}>
+                                    ${icon(n.ic)} ${n.label}
+                                </button>`)}
+                        </nav>
+                        <div class="sidebar-footer">
+                            <div class="sidebar-user">
+                                <span class="user-avatar">${user.name.charAt(0).toUpperCase()}</span>
+                                <div>
+                                    <p class="user-name">${user.name}</p>
+                                    <p class="text-muted text-xs">${user.role}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                    <main class="main-content">
+                        ${pages[page] || pages.tasks}
+                    </main>
+                    <nav class="mobile-nav"><div class="mobile-nav-inner">
+                        ${NAV.slice(0, 4).map(n => html`
+                            <button class="mobile-link ${page===n.id?'active':''}" onClick=${()=>navigate(n.id)} key=${n.id}>
+                                ${icon(n.ic)}<span>${n.label}</span>
+                            </button>`)}
+                        <button class="mobile-link ${page==='settings'?'active':''}" onClick=${()=>navigate('settings')}>
+                            ${icon('more')}<span>More</span>
+                        </button>
+                    </div></nav>
+                </div>`;
+        }
+
+        render(html`<${App} />`, document.getElementById('app'));
+    </script>
+</body>
+</html>

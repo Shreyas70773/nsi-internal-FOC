@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: nsi-bot
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/opt/nsi-bot/data
+      - ./templates:/opt/nsi-bot/templates
+      - ./credentials:/opt/nsi-bot/credentials
+      - ./config:/opt/nsi-bot/config
+      - nsi_tmp:/tmp/drive_sync
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: nsi-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
+  caddy_config:
+  nsi_tmp:
