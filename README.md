@@ -24,6 +24,10 @@ NSI Internal FOC (Federal Order of Control) is an enterprise-grade, WhatsApp-nat
 
 ---
 
+## Idea 
+<img width="1288" height="680" alt="image" src="https://github.com/user-attachments/assets/83ab5199-8e9e-4fad-b704-cbe13a9aab2b" />
+
+
 ## 🏗️ Architecture
 
 ```
@@ -432,7 +436,7 @@ As of March 18, 2026, this is proprietary software for **NSI / Pacific Unity MEA
 ## 📞 Support & Escalation
 
 **For bugs/issues:** Contact Shreyas Sunil (Ops Lead)  
-**For vendor integrations:** Contact Dad Africa (Business Owner)  
+**For vendor integrations:** Contact KT Sunil (Business Owner)  
 **For technical architecture:** Refer to the engineering whitepaper above.
 
 ---
